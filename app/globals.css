@@ -261,7 +261,6 @@ button.tag { border: 0; cursor: pointer; font-size: 13px; padding: 4px 9px; bord
 .rope .anchor { fill: var(--accent-text); }
 .thinking-line { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); }
 .thinking-line .rope { width: 84px; height: 31px; }
-.empty .rope { width: min(300px, 70%); height: auto; aspect-ratio: 120 / 44; margin-bottom: 6px; opacity: 0.9; }
 @media (prefers-reduced-motion: reduce) { .rope.thinking { animation: rope-fade 2.4s ease-in-out infinite; } @keyframes rope-fade { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } } }
 
 /* Beside the page: a button in the corner, and a panel docked on the right. */

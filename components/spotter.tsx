@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, Fragment, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, useBoard } from "./board";
-import Rope, { Thinking } from "./Rope";
+import { Thinking } from "./Rope";
 
 // Conversations with the assistant, shared by the side panel and the full
 // page so both show the same thing. They are kept in this browser only.
@@ -157,7 +157,6 @@ export function SpotterChat() {
       <div className="chat-log" ref={log} aria-live="polite">
         {turns.length === 0 && (
           <div className="empty">
-            <Rope thinking slow />
             <p>Try one of these:</p>
             <div className="chips">{starters.map((s) => <button key={s} className="chip" onClick={() => send(s)}>{s}</button>)}</div>
           </div>
