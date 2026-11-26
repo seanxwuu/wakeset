@@ -27,7 +27,7 @@ const ROPES = [
   { still: rope(0.6 + Math.PI, H / 2 + 9), moving: cycle(Math.PI, H / 2 + 9) },
 ];
 
-export default function Rope({ thinking = false, slow = false, className = "", title }: { thinking?: boolean; /** A calm, slower wave for places where nothing is waiting. */ slow?: boolean; className?: string; title?: string }) {
+export default function Rope({ thinking = false, className = "", title }: { thinking?: boolean; className?: string; title?: string }) {
   return (
     <svg className={`rope ${thinking ? "thinking" : ""} ${className}`} viewBox={`0 0 ${W} ${H}`} role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : true}>
       {ROPES.map((r, i) => (
@@ -35,7 +35,7 @@ export default function Rope({ thinking = false, slow = false, className = "", t
           {/* The rope, then its twist: short darker strands laid along the same line. */}
           {["strand", "twist"].map((part) => (
             <path key={part} className={part} d={r.still}>
-              {thinking && <animate attributeName="d" dur={slow ? "3.2s" : "1.15s"} repeatCount="indefinite" values={r.moving} />}
+              {thinking && <animate attributeName="d" dur="1.15s" repeatCount="indefinite" values={r.moving} />}
             </path>
           ))}
         </g>
