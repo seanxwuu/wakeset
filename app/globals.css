@@ -1,6 +1,7 @@
 /* The same shell, surfaces and spacing as Overture and Conduit: a warm paper
    background, white cards, a side bar. WakeSet's own parts are its typeface
-   and its orange accent. The typeface is Helvetica, which is licensed and so
+   and its ceramic-yellow accent, taken from the logo. Yellow is light, so text
+   on it is dark (--accent-ink) and yellow used as text is a deeper ochre (--accent-text). The typeface is Helvetica, which is licensed and so
    not shipped: Apple devices have it, others fall back to Arial or Roboto. */
 :root {
   --bg: #f6f5f1;
@@ -11,10 +12,10 @@
   --muted: #666b73;
   --line: #e2dfd7;
   --line-strong: #c9c5ba;
-  --accent: #c2410c;
-  --accent-ink: #ffffff;
-  --accent-text: #a4380b;
-  --accent-soft: #fbe9df;
+  --accent: #e0b648;
+  --accent-ink: #231c06;
+  --accent-text: #7d5c07;
+  --accent-soft: #faf0cf;
   --good: #0e8345;
   --good-soft: #e2f2e8;
   --bad: #a3322b;
@@ -23,7 +24,7 @@
   --side-ink: #4a4f57;
   --side-strong: #17191c;
   --side-hover: #f0eee8;
-  --side-on: #fbe9df;
+  --side-on: #faf0cf;
   --side-line: #e2dfd7;
   --radius: 10px;
   --sans: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", Roboto, sans-serif;
@@ -40,10 +41,10 @@
     --muted: #9aa1aa;
     --line: #2a3038;
     --line-strong: #3b434d;
-    --accent: #d4530f;
-    --accent-ink: #ffffff;
-    --accent-text: #ffa873;
-    --accent-soft: #3a1d0d;
+    --accent: #dcb347;
+    --accent-ink: #1c1604;
+    --accent-text: #ecca72;
+    --accent-soft: #332a10;
     --good: #2ba565;
     --good-soft: #11301f;
     --bad: #ff9c94;
@@ -52,7 +53,7 @@
     --side-ink: #a8aeb6;
     --side-strong: #ffffff;
     --side-hover: #171b20;
-    --side-on: #3a1d0d;
+    --side-on: #332a10;
     --side-line: #232830;
     color-scheme: dark;
   }
@@ -70,9 +71,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Shell */
 .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
 .side { background: var(--side); color: var(--side-ink); border-right: 1px solid var(--side-line); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; font-size: 15px; }
-.brand { color: var(--side-strong); font-weight: 700; font-size: 19px; padding: 4px 8px 16px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 9px; }
-.mark { width: 26px; height: 26px; flex: none; color: var(--side-strong); }
-.mark .strike { stroke: var(--accent); }
+.brand { color: var(--side-strong); font-weight: 700; font-size: 20px; padding: 0 8px 14px; letter-spacing: -0.01em; display: grid; gap: 2px; text-decoration: none; }
+.logo { display: block; width: 100%; height: auto; }
+.logo.hero { width: min(420px, 100%); margin: -8px 0 8px -8px; }
 .nav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: inherit; text-decoration: none; }
 .nav:hover { background: var(--side-hover); color: var(--side-strong); }
 .nav.on { background: var(--side-on); color: var(--accent-text); font-weight: 600; }
@@ -146,15 +147,16 @@ section.block .how { color: var(--muted); font-size: 14px; margin: 0 0 10px; }
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0 14px; min-height: 38px; font-size: 15px; line-height: 1; transition: border-color 0.12s, background 0.12s; cursor: pointer; font-weight: 500; white-space: nowrap; text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
 .btn:hover { border-color: var(--line-strong); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.primary:hover { filter: brightness(1.08); }
+.btn.primary { font-weight: 700; }
+.btn.primary:hover { filter: brightness(0.96); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.sm { padding: 0 11px; min-height: 32px; font-size: 14px; }
 .btn.danger { border-color: transparent; background: var(--bad-soft); color: var(--bad); }
 .btn.danger:hover { border-color: var(--bad); }
 input, select, textarea { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface); width: 100%; min-width: 0; color: var(--ink); font-weight: 400; font-size: 15px; }
 textarea { resize: vertical; line-height: 1.5; }
-input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; padding: 0; accent-color: var(--accent); flex: none; }
-input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; padding: 0; accent-color: var(--accent-text); flex: none; }
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 label.f { display: grid; gap: 5px; font-size: 13px; color: var(--muted); font-weight: 500; min-width: 0; }
 label.tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
 
@@ -202,7 +204,7 @@ dialog[open] { display: flex; flex-direction: column; }
 /* Beside the page: a button in the corner, and a panel docked on the right. */
 .spotter-fab { position: fixed; right: 20px; bottom: 20px; z-index: 20; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); }
 .spotter-fab svg { width: 18px; height: 18px; }
-.spotter-fab:hover { filter: brightness(1.08); }
+.spotter-fab:hover { filter: brightness(0.96); }
 .spotter-panel { position: fixed; top: 0; right: 0; z-index: 35; width: 380px; max-width: 100vw; height: 100dvh; background: var(--side); border-left: 1px solid var(--side-line); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08); }
 .spotter-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 /* On a wide screen the page makes room, so the board and the assistant sit side by side. */
@@ -233,7 +235,7 @@ dialog[open] { display: flex; flex-direction: column; }
   .menu-btn svg { width: 22px; height: 22px; }
   .menu-btn:active { background: var(--side-hover); }
   .topbar-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 19px; color: var(--side-strong); text-decoration: none; letter-spacing: -0.01em; }
-  .topbar-brand .mark { width: 24px; height: 24px; }
+  .topbar-brand .logo { width: auto; height: 40px; }
   .topbar-page { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--side-ink); padding-right: 6px; white-space: nowrap; }
   .scrim { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(8, 12, 20, 0.45); }
   .side { position: fixed; top: 0; left: 0; z-index: 50; width: min(280px, 84vw); height: 100dvh; transform: translateX(-100%); transition: transform 0.2s ease-out; padding-top: calc(18px + env(safe-area-inset-top)); }
