@@ -6,7 +6,7 @@ import type { State } from "@/lib/types";
 // The browser's copy of the person's routine and week. Pages read it and
 // change it through `update`; changes are saved a moment later, one save at a
 // time, each carrying the revision it started from.
-export type Me = { email: string | null; spotter: boolean; assistant: string };
+export type Me = { email: string | null; spotter: boolean; assistant: string; key: { source: "yours" | "site" | null; last4?: string } };
 type Board = {
   state: State | null;
   me: Me | null;

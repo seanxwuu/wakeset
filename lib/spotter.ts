@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { LIBRARY } from "./library";
+import { decrypt, encrypt } from "./secrets";
 import { getState, save } from "./state";
 import * as store from "./store";
 import { ASSISTANT, DayInput, RoutineInput, withIds, type Routine, type State } from "./types";
@@ -13,7 +14,47 @@ const MODEL = process.env.WAKESET_MODEL || "claude-opus-5-5";
 const PER_PERSON = Number(process.env.WAKESET_AI_DAILY || 40);
 const PER_SITE = Number(process.env.WAKESET_AI_DAILY_TOTAL || 2000);
 
-export const hasSpotter = () => Boolean(process.env.ANTHROPIC_API_KEY);
+// Where the key comes from. A person can connect their own Claude key on the
+// Spotter page; it is encrypted at rest, never sent back to the browser, and
+// used only for that person's messages. Without one, the site's key
+// (ANTHROPIC_API_KEY) is used if the site has one.
+type SavedKey = { value: string; last4: string; savedAt: string };
+const KEY_DOC = "ai-key";
+
+function ownKey(owner: string): { key: string; last4: string } | null {
+  const saved = store.read<SavedKey | null>(owner, KEY_DOC, null);
+  const key = saved ? decrypt(saved.value) : undefined;
+  return saved && key ? { key, last4: saved.last4 } : null;
+}
+
+/** What the browser may know about the connection: where the key comes from and its last four characters. Never the key. */
+export function connection(owner: string): { source: "yours" | "site" | null; last4?: string } {
+  const own = ownKey(owner);
+  if (own) return { source: "yours", last4: own.last4 };
+  return { source: process.env.ANTHROPIC_API_KEY ? "site" : null };
+}
+
+/** Checks a key with Anthropic and saves it for this person. */
+export async function connectKey(owner: string, input: unknown) {
+  const key = String(input ?? "").trim();
+  if (!/^sk-ant-[\w-]{20,300}$/.test(key)) throw new Error("That does not look like a Claude API key. They start with sk-ant- and come from console.anthropic.com.");
+  let checked = true;
+  try {
+    await new Anthropic({ apiKey: key, maxRetries: 0, timeout: 15_000 }).models.retrieve(MODEL);
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) throw new Error("Anthropic rejected that key. Check it was copied whole and has not been revoked.");
+    if (error instanceof Anthropic.PermissionDeniedError || error instanceof Anthropic.NotFoundError) throw new Error(`That key works, but it cannot use the model ${ASSISTANT} runs on (${MODEL}).`);
+    // Anything else (Anthropic unreachable, rate limited) says nothing about the key: save it and say it was not checked.
+    checked = false;
+  }
+  store.write(owner, KEY_DOC, { value: encrypt(key), last4: key.slice(-4), savedAt: new Date().toISOString() } satisfies SavedKey);
+  return { ...connection(owner), checked };
+}
+
+export function disconnectKey(owner: string) {
+  store.remove(owner, KEY_DOC);
+  return connection(owner);
+}
 
 const Turn = z.object({ role: z.enum(["user", "assistant"]), content: z.string().trim().min(1).max(4000) });
 const History = z.array(Turn).min(1).max(40);
@@ -58,17 +99,19 @@ function describe(state: State) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-/** Counts one message against the person's and the site's daily allowance. */
+/** Counts one message against the person's and the site's daily allowance. Only for the site's key: a person's own key spends their own credit. */
 function spend(owner: string) {
   if (store.bump(store.SYSTEM, `ai:${today()}:all`) > PER_SITE) throw new Error(`${ASSISTANT} has reached today's limit for the whole site. Try again tomorrow.`);
   if (store.bump(store.SYSTEM, `ai:${today()}:${owner}`) > PER_PERSON) throw new Error(`You have reached today's limit of ${PER_PERSON} messages to ${ASSISTANT}. It resets at midnight UTC.`);
 }
 
 export async function chat(owner: string, rawHistory: unknown, signal?: AbortSignal): Promise<{ reply: string; changed: boolean }> {
-  if (!hasSpotter()) throw new Error(`${ASSISTANT} is not switched on for this site yet.`);
+  const own = ownKey(owner);
+  const apiKey = own?.key ?? process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error(`${ASSISTANT} is not connected yet. Add a Claude API key on the ${ASSISTANT} page.`);
   const history = History.parse(rawHistory);
   if (history.at(-1)!.role !== "user") throw new Error("Nothing to answer.");
-  spend(owner);
+  if (!own) spend(owner);
 
   let changed = false;
   const apply = (edit: (routine: Routine | null) => RoutineInput) => {
@@ -117,7 +160,7 @@ export async function chat(owner: string, rawHistory: unknown, signal?: AbortSig
   ];
 
   const state = getState(owner);
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey });
   const message = await client.beta.messages.toolRunner(
     {
       model: MODEL,
@@ -146,7 +189,8 @@ export async function chat(owner: string, rawHistory: unknown, signal?: AbortSig
 /** A message a person can act on, whatever went wrong talking to the model. */
 export function spotterError(error: unknown): string {
   if (error instanceof z.ZodError) return "That message could not be read.";
-  if (error instanceof Anthropic.AuthenticationError) return `${ASSISTANT}'s API key was rejected. Check ANTHROPIC_API_KEY.`;
+  if (error instanceof Anthropic.AuthenticationError) return `${ASSISTANT}'s API key was rejected. Connect a working key on the ${ASSISTANT} page.`;
+  if (error instanceof Anthropic.PermissionDeniedError) return `That API key is not allowed to use ${ASSISTANT}'s model. Check the key's workspace and billing at console.anthropic.com.`;
   if (error instanceof Anthropic.RateLimitError) return `${ASSISTANT} is busy right now. Try again in a minute.`;
   if (error instanceof Anthropic.APIConnectionError) return `${ASSISTANT} could not be reached. Try again.`;
   if (error instanceof Anthropic.APIError) return `${ASSISTANT} hit a problem (${error.status ?? "error"}). Try again.`;
