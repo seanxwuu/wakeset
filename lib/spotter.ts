@@ -10,7 +10,7 @@ import { ASSISTANT, DayInput, RoutineInput, withIds, type Routine, type State } 
 // Spotter: the assistant. He reads the person's routine and changes it
 // through three tools. The model proposes a routine; code checks its shape
 // (zod, via the tool schemas) and is the only thing that writes it.
-const MODEL = process.env.WAKESET_MODEL || "claude-opus-5-5";
+export const MODEL = process.env.WAKESET_MODEL || "claude-opus-5-5";
 const PER_PERSON = Number(process.env.WAKESET_AI_DAILY || 40);
 const PER_SITE = Number(process.env.WAKESET_AI_DAILY_TOTAL || 2000);
 

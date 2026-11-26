@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as auth from "@/lib/auth";
-import { chat, connectKey, connection, disconnectKey, spotterError } from "@/lib/spotter";
+import { chat, connectKey, connection, disconnectKey, MODEL, spotterError } from "@/lib/spotter";
 import { Conflict, getState, putState } from "@/lib/state";
 import { ASSISTANT } from "@/lib/types";
 
@@ -39,7 +39,7 @@ function overLimit(key: string, limit: number, windowMs = 60_000) {
 /** For the browser: whether the assistant can be used, and where its key comes from. */
 function describeSpotter(owner: string) {
   const key = connection(owner);
-  return { spotter: key.source !== null, key };
+  return { spotter: key.source !== null, key, model: MODEL };
 }
 
 class Refused extends Error {

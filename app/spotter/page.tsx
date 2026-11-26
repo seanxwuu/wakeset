@@ -1,22 +1,36 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useBoard } from "@/components/board";
-import { SpotterChat, SpotterConnection, useSpotter } from "@/components/spotter";
+import { SpotterChat, SpotterConnection, SpotterHistory, useSpotter } from "@/components/spotter";
 
 export default function Spotter() {
   const { me } = useBoard();
-  const { turns, clear } = useSpotter();
+  const { turns, newChat, busy } = useSpotter();
+  const [showKey, setShowKey] = useState(false);
   const name = me?.assistant ?? "Spotter";
+  const connected = Boolean(me?.spotter);
   return (
-    <>
-      <header className="top">
-        <h1>{name}</h1>
-        {turns.length > 0 && <button className="btn sm" onClick={() => { if (confirm("Clear this conversation?")) clear(); }}>Clear chat</button>}
-      </header>
-      <p className="lede">Tell {name} what you want from your week and he writes or changes the routine for you. He is also on every page, from the button in the corner. You can still edit everything by hand in <Link href="/build">Build</Link>.</p>
-      <SpotterConnection />
-      {me?.spotter && <SpotterChat />}
-    </>
+    <div className="spotter-page">
+      <div className="card chat">
+        <div className="card-head">
+          <div>
+            <h1>{name}</h1>
+            <p className="sub">Ask for anything Build can do. He writes and changes your week, just from a sentence.</p>
+          </div>
+          <div className="row" style={{ flex: "none" }}>
+            {turns.length > 0 && <button type="button" className="btn sm" onClick={newChat} disabled={busy}>New chat</button>}
+            {me && (
+              <button type="button" className={`tag ${connected ? "good" : "warn"}`} aria-expanded={showKey} onClick={() => setShowKey(!showKey)} title="Show or change the API key">
+                {connected ? `Claude (Anthropic) · ${me.model}` : "No model connected"}
+              </button>
+            )}
+          </div>
+        </div>
+        {me && (!connected || showKey) && <SpotterConnection />}
+        {(connected || !me) && <SpotterChat />}
+      </div>
+      <SpotterHistory />
+    </div>
   );
 }

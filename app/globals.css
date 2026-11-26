@@ -215,30 +215,67 @@ dialog[open] { display: flex; flex-direction: column; }
 .pick strong { display: block; font-weight: 600; }
 .pick span { font-size: 13px; color: var(--muted); }
 
-/* Spotter */
-.spotter { display: flex; flex-direction: column; min-height: 0; flex: 1; gap: 8px; }
-.chat { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 120px; overflow-y: auto; padding: 2px; }
-.msg { padding: 10px 14px; border-radius: 12px; max-width: 86%; white-space: pre-wrap; overflow-wrap: anywhere; }
-.msg.user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; border-bottom-right-radius: 4px; }
-.msg.assistant { background: var(--sunken); align-self: flex-start; border-bottom-left-radius: 4px; }
-.msg.thinking { color: var(--muted); font-style: italic; }
-.compose { display: flex; gap: 8px; align-items: flex-end; }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 14px; cursor: pointer; background: var(--surface); text-align: left; }
+/* Spotter: laid out like Conductor and Operator. One card holds the title, the conversation and the box to write in. */
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sub { color: var(--muted); margin-top: 4px; max-width: 60ch; }
+button.tag { border: 0; cursor: pointer; font-size: 13px; padding: 4px 9px; border-radius: 6px; }
+.tag.good { background: var(--accent-soft); color: var(--accent-text); }
+.tag.warn { background: var(--bad-soft); color: var(--bad); }
+.spotter-page { display: grid; gap: 16px; }
+.chat { display: flex; flex-direction: column; height: calc(100dvh - 130px); min-height: 440px; }
+.chat-log { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 2px 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-log > .empty { margin-top: auto; padding-bottom: 20px; }
+.empty { text-align: center; color: var(--muted); padding: 28px 12px; display: grid; gap: 10px; justify-items: center; }
+.empty .chips { justify-content: center; }
+.bubble { max-width: 78%; padding: 10px 13px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15.5px; line-height: 1.55; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.bubble.assistant { align-self: stretch; max-width: 100%; background: var(--sunken); border-bottom-left-radius: 4px; padding: 14px 18px; white-space: normal; }
+.bubble.assistant.thinking { align-self: flex-start; padding: 10px 14px; }
+.formatted > * + * { margin-top: 10px; }
+.formatted ul, .formatted ol { padding-left: 22px; margin: 0; }
+.formatted li + li { margin-top: 6px; }
+.formatted strong { font-weight: 700; }
+.chat-box { border: 1px solid var(--line); border-radius: 12px; padding: 8px; background: var(--surface); }
+.chat-box:focus-within { border-color: var(--line-strong); }
+.chat-row { display: flex; gap: 8px; align-items: flex-end; }
+.chat-row textarea { flex: 1; min-width: 0; width: 0; border: 0; min-height: 38px; max-height: 160px; resize: none; padding: 8px 6px; line-height: 1.45; field-sizing: content; background: transparent; }
+.chat-row textarea:focus { outline: 0; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px; font-size: 14px; cursor: pointer; background: var(--surface); color: var(--muted); text-align: left; }
 .chip:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
+.past { max-height: 260px; overflow-y: auto; display: grid; gap: 2px; margin: 0 -6px; padding: 0 6px; }
+.past-row { display: flex; align-items: center; gap: 10px; border-radius: 8px; padding: 2px 4px 2px 0; }
+.past-row:hover, .past-row.on { background: var(--sunken); }
+.past-open { flex: 1; min-width: 0; text-align: left; border: 0; background: none; cursor: pointer; padding: 7px 8px; display: grid; gap: 1px; }
+.past-open b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.past-open span { font-size: 13.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.past-when { white-space: nowrap; }
+.past-x { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; padding: 4px 8px; border-radius: 6px; }
+.past-x:hover { color: var(--bad); background: var(--bad-soft); }
+
+/* The rope: WakeSet's sign that something is being worked on. */
+.rope { display: inline-block; width: 2.6em; height: 1.05em; vertical-align: -0.2em; flex: none; overflow: visible; }
+.rope path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.rope .strand { stroke: var(--accent); stroke-width: 3.6; }
+.rope .twist { stroke: var(--accent-text); stroke-width: 3.6; stroke-dasharray: 0.9 4.2; opacity: 0.4; }
+.rope .anchor { fill: var(--accent-text); }
+.thinking-line { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); }
+.thinking-line .rope { width: 84px; height: 31px; }
+.empty .rope { width: min(300px, 70%); height: auto; aspect-ratio: 120 / 44; margin-bottom: 6px; opacity: 0.9; }
+@media (prefers-reduced-motion: reduce) { .rope.thinking { animation: rope-fade 2.4s ease-in-out infinite; } @keyframes rope-fade { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } } }
+
 /* Beside the page: a button in the corner, and a panel docked on the right. */
 .spotter-fab { position: fixed; right: 20px; bottom: 20px; z-index: 20; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); }
 .spotter-fab svg { width: 18px; height: 18px; }
 .spotter-fab:hover { filter: brightness(0.96); }
-.spotter-panel { position: fixed; top: 0; right: 0; z-index: 35; width: 380px; max-width: 100vw; height: 100dvh; background: var(--side); border-left: 1px solid var(--side-line); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08); }
-.spotter-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.spotter-panel { position: fixed; top: 0; right: 0; z-index: 35; width: 380px; max-width: 100vw; height: 100dvh; min-height: 0; background: var(--side); border-left: 1px solid var(--side-line); padding: 16px; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08); }
+.spotter-panel .card-head { align-items: center; }
+.spotter-panel .bubble { max-width: 90%; }
 /* On a wide screen the page makes room, so the board and the assistant sit side by side. */
 @media (min-width: 1180px) { .shell:has(~ .spotter-panel) { padding-right: 380px; } .spotter-panel { box-shadow: none; } }
-/* On the Spotter page the conversation fills the height left under the heading. */
-.main > .spotter { height: calc(100dvh - 230px); min-height: 360px; }
 
 .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
-.connection { margin-bottom: 16px; }
+.chat > .connection { margin-bottom: 14px; background: var(--raised); flex: none; }
 .connection h3 .dot { width: 9px; height: 9px; vertical-align: 1px; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--sunken); }
 .seg button { border: 0; background: transparent; min-height: 32px; font-size: 14px; padding: 0 14px; border-radius: 6px; cursor: pointer; font-weight: 500; color: var(--muted); }
@@ -281,6 +318,7 @@ dialog[open] { display: flex; flex-direction: column; }
   .lb { grid-column: 2; }
   .grid3 { grid-template-columns: 1fr 1fr; }
   .grid3 > :first-child { grid-column: 1 / -1; }
-  .msg { max-width: 92%; }
+  .bubble { max-width: 90%; }
+  .card-head { flex-wrap: wrap; }
   .spotter-panel { width: 100vw; }
 }

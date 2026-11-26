@@ -22,7 +22,7 @@ With nothing configured it runs: each visitor gets a private routine tied to a c
 |---|---|
 | Week | The board. One tab per training day with a progress bar. Tap an exercise to cross it out, log the weight used, open "How to" for the cue and demo link. "Start next week" clears the ticks, keeps the weights, and asks how the new week should differ: mix it up (one move per superset traded for a similar one), repeat, or have Spotter write it. |
 | Build | The editor. Add, reorder, duplicate and delete days, blocks and exercises. "Add exercise" opens the library (about 95 moves, filtered by muscle group and equipment) or takes a name you type. |
-| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. He is also on every page: the button in the corner opens him in a panel on the right, docked beside the board on a wide screen. He knows which day is open and the weights you logged. The top of the page is where a Claude API key is connected, replaced or removed. |
+| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. He is also on every page: the button in the corner opens him in a panel on the right, docked beside the board on a wide screen. He knows which day is open and the weights you logged. The page is laid out like Conductor and Operator: one card with the title, the model tag, the conversation and the box to write in, and a History card of earlier conversations (kept in the browser). The model tag opens the API key: connect, replace or remove it. |
 | Account | Make an account to keep the routine and open it on other devices. Choose the theme (system, light, dark). Export or import a routine file. Erase everything. |
 
 A first visit offers starter routines: the home 5-day Upper / Lower / Core plan, a 3-day gym plan, a no-equipment plan, or a blank week.
@@ -37,6 +37,7 @@ A first visit offers starter routines: the home 5-day Upper / Lower / Core plan,
 - **`lib/spotter.ts`** runs Claude with three tools (`set_routine`, `set_day`, `remove_day`). The model proposes; the tool schemas check the shape and code does the writing. A person's own key (connected on the Spotter page) is checked with Anthropic, encrypted with AES-256-GCM under a key derived from the server secret (`lib/secrets.ts`), and never sent back to the browser, only its last four characters. Without one, the site's key is used if set, with messages capped per person and per site per day.
 - **`lib/vary.ts`** is "mix it up": the lists of moves that can stand in for each other, and the trade of one per working block.
 - **`lib/library.ts`** and **`lib/templates.ts`** are the exercise library and starter routines. Add to them freely.
+- **`components/Rope.tsx`** is the thinking animation: a pair of battle ropes with waves running down them.
 - **`components/board.tsx`** holds the browser's copy and saves changes a moment after they are made.
 
 ## What has and has not been tested

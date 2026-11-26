@@ -6,7 +6,7 @@ import type { State } from "@/lib/types";
 // The browser's copy of the person's routine and week. Pages read it and
 // change it through `update`; changes are saved a moment later, one save at a
 // time, each carrying the revision it started from.
-export type Me = { email: string | null; spotter: boolean; assistant: string; key: { source: "yours" | "site" | null; last4?: string } };
+export type Me = { email: string | null; spotter: boolean; assistant: string; key: { source: "yours" | "site" | null; last4?: string }; model: string };
 type Board = {
   state: State | null;
   me: Me | null;
@@ -25,11 +25,12 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T = Record<string, unknown>>(method: string, path: string, body?: unknown): Promise<T> {
+export async function api<T = Record<string, unknown>>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`/api/${path}`, { method, headers: body === undefined ? undefined : { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
-  } catch {
+    response = await fetch(`/api/${path}`, { method, headers: body === undefined ? undefined : { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal });
+  } catch (error) {
+    if ((error as Error).name === "AbortError") throw error;
     throw new ApiError("Could not reach WakeSet. Check your connection.", 0, {});
   }
   const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
