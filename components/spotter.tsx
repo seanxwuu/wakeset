@@ -90,7 +90,7 @@ export function SpotterChat() {
 
   if (!me || !state) return <p className="quiet">Loading…</p>;
   const name = me.assistant;
-  if (!me.spotter) return <div className="card"><h3>{name} is not switched on yet</h3><p>This site has no AI key set up. Build your routine by hand in <Link href="/build">Build</Link> for now.</p></div>;
+  if (!me.spotter) return <div className="card"><h3>{name} is not connected yet</h3><p><Link href="/spotter">Connect a Claude API key</Link> on the {name} page to switch him on. Until then, build your routine by hand in <Link href="/build">Build</Link>.</p></div>;
 
   const ideas = state.routine
     ? ["Make today's session 10 minutes shorter", "My arms are very sore. Ease off the upper days", "Write next week: a bit heavier, a few different moves", "Swap anything that needs a bench"]
@@ -151,5 +151,68 @@ export function SpotterPanel() {
       </div>
       <SpotterChat />
     </aside>
+  );
+}
+
+/** Connecting the assistant: a person's own Claude API key, entered here and never shown again. */
+export function SpotterConnection() {
+  const { me, reload, toast } = useBoard();
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [replacing, setReplacing] = useState(false);
+  if (!me) return null;
+  const name = me.assistant;
+  const { source, last4 } = me.key;
+
+  const run = async (work: () => Promise<{ checked?: boolean }>, done: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await work();
+      setKey("");
+      setReplacing(false);
+      await reload();
+      toast(result.checked === false ? "Saved, but Anthropic could not be reached to check it" : done);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const form = (
+    <form className="stack" onSubmit={(e) => { e.preventDefault(); run(() => api("PUT", "key", { key }), `${name} is connected`); }}>
+      <label className="f">Claude API key
+        <input type="password" autoComplete="off" spellCheck={false} placeholder="sk-ant-…" value={key} onChange={(e) => setKey(e.target.value)} />
+      </label>
+      <div className="row">
+        <button className="btn primary" disabled={busy || !key.trim()}>{busy ? "Checking…" : "Connect"}</button>
+        {replacing && <button type="button" className="btn" onClick={() => { setReplacing(false); setKey(""); setError(""); }}>Cancel</button>}
+      </div>
+      <p className="quiet small">Get a key at console.anthropic.com (API keys). It is checked with Anthropic, stored encrypted, never shown again, and used only for your own messages to {name}. Those messages are billed to your Anthropic account.</p>
+    </form>
+  );
+
+  return (
+    <div className="card stack connection">
+      <div className="spread">
+        <div>
+          <h3><span className={`dot ${source ? "on" : ""}`} />{source ? `${name} is connected` : `Connect ${name}`}</h3>
+          {source === "yours" && <p className="quiet">Using your Claude API key ending <span className="mono">{last4}</span>.</p>}
+          {source === "site" && <p className="quiet">This site provides {name}, with a daily message limit. Connect your own Claude API key to use your own allowance instead.</p>}
+          {!source && <p className="quiet">{name} runs on Claude. Add a Claude API key to switch him on.</p>}
+        </div>
+        {source === "yours" && !replacing && (
+          <div className="row">
+            <button className="btn sm" onClick={() => setReplacing(true)}>Replace key</button>
+            <button className="btn sm danger" disabled={busy} onClick={() => { if (confirm(`Disconnect your key? ${name} stops working until a key is connected again.`)) run(() => api("DELETE", "key"), "Key removed"); }}>Disconnect</button>
+          </div>
+        )}
+        {source === "site" && !replacing && <button className="btn sm" onClick={() => setReplacing(true)}>Use my own key</button>}
+      </div>
+      {(!source || replacing) && form}
+      {error && <p className="problem" role="alert">{error}</p>}
+    </div>
   );
 }

@@ -10,9 +10,14 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#0a0c0f" }, { color: "#fbfaf7" }] };
 
+// Sets the theme before the page paints, so a dark-mode user never sees a white flash.
+// "system" (or nothing saved) leaves the attribute off and the device setting decides.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("wakeset-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
       <body>
         <BoardProvider>
           <SpotterProvider>

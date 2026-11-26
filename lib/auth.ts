@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { rootSecret } from "./secrets";
 import * as store from "./store";
 
 // Who is asking. Every visitor has an id held in a signed cookie. A new
@@ -12,14 +13,7 @@ const DAYS = 180;
 type User = { id: string; email: string; hash: string; createdAt: string; version: number };
 export type Identity = { id: string; email: string | null };
 
-function secret(): Buffer {
-  const fromEnv = process.env.WAKESET_SECRET;
-  if (fromEnv && fromEnv.length >= 16) return Buffer.from(fromEnv);
-  let saved = store.read<string>(store.SYSTEM, "secret", "");
-  if (!saved) store.write(store.SYSTEM, "secret", (saved = crypto.randomBytes(32).toString("hex")));
-  return Buffer.from(saved);
-}
-const sign = (text: string) => crypto.createHmac("sha256", secret()).update(text).digest("base64url");
+const sign = (text: string) => crypto.createHmac("sha256", rootSecret()).update(text).digest("base64url");
 const same = (a: string, b: string) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
 const userKey = (email: string) => `user:${email}`;

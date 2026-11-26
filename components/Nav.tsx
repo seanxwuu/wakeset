@@ -66,7 +66,7 @@ export function Nav() {
                 ? <><b>Signed in</b><span>{me.email}</span></>
                 : <><b>Not signed in</b><span>Saved in this browser. <Link href="/account">Make an account</Link> to keep it.</span></>}
             </div>
-            <div><span className={`dot ${me.spotter ? "on" : ""}`} />{assistant} {me.spotter ? "on" : "off"}</div>
+            <div><span className={`dot ${me.spotter ? "on" : ""}`} />{me.spotter ? `${assistant} connected` : <Link href="/spotter">Connect {assistant}</Link>}</div>
           </div>
         )}
       </nav>

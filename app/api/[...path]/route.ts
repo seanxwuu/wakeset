@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as auth from "@/lib/auth";
-import { chat, hasSpotter, spotterError } from "@/lib/spotter";
+import { chat, connectKey, connection, disconnectKey, spotterError } from "@/lib/spotter";
 import { Conflict, getState, putState } from "@/lib/state";
 import { ASSISTANT } from "@/lib/types";
 
@@ -36,6 +36,12 @@ function overLimit(key: string, limit: number, windowMs = 60_000) {
   return ++entry.count > limit;
 }
 
+/** For the browser: whether the assistant can be used, and where its key comes from. */
+function describeSpotter(owner: string) {
+  const key = connection(owner);
+  return { spotter: key.source !== null, key };
+}
+
 class Refused extends Error {
   constructor(message: string, public status: number) {
     super(message);
@@ -58,7 +64,14 @@ async function handle(request: Request, path: string[], me: auth.Identity, addre
 
   switch (`${request.method} ${path.join("/")}`) {
     case "GET me":
-      return { body: { email: me.email, spotter: hasSpotter(), assistant: ASSISTANT } };
+      return { body: { email: me.email, assistant: ASSISTANT, ...describeSpotter(me.id) } };
+
+    // The person's own Claude key for the assistant. The key itself never comes back.
+    case "PUT key":
+      if (overLimit(`key:${address}`, 10, 10 * 60_000)) throw new Refused("Too many tries. Wait a few minutes.", 429);
+      return { body: await connectKey(me.id, (await body()).key) };
+    case "DELETE key":
+      return { body: disconnectKey(me.id) };
     case "GET state":
       return { body: getState(me.id) };
     case "PUT state":

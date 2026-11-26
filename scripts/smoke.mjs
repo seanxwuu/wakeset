@@ -3,6 +3,7 @@
 // validated and cannot overwrite a newer copy, accounts work, and requests
 // from other sites are refused. Run `npm run build` first.
 import { spawn } from "node:child_process";
+import http from "node:http";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -10,7 +11,17 @@ import path from "node:path";
 const PORT = 3299;
 const BASE = `http://localhost:${PORT}`;
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wakeset-smoke-"));
-const server = spawn("npx", ["next", "start", "-p", String(PORT)], { env: { ...process.env, WAKESET_DATA_DIR: dir, ANTHROPIC_API_KEY: "" }, stdio: "pipe" });
+// A stand-in for Anthropic, so key checking is tested without the real service: it accepts one key and rejects the rest.
+const GOOD_KEY = "sk-ant-smoke-test-key-0123456789abcdWXYZ";
+const fake = http.createServer((req, res) => {
+  const ok = [req.headers["x-api-key"], String(req.headers.authorization ?? "").replace(/^Bearer /, "")].includes(GOOD_KEY);
+  res.writeHead(ok ? 200 : 401, { "content-type": "application/json" });
+  res.end(JSON.stringify(ok ? { id: "claude-opus-5-5", type: "model", display_name: "Claude", created_at: "2026-01-01T00:00:00Z" } : { type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } }));
+});
+await new Promise((resolve) => fake.listen(3298, resolve));
+
+// Started in its own process group, so stopping it at the end also stops the worker it starts.
+const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(PORT)], { env: { ...process.env, WAKESET_DATA_DIR: dir, ANTHROPIC_API_KEY: "", ANTHROPIC_BASE_URL: "http://localhost:3298" }, stdio: "pipe", detached: true });
 let log = "";
 server.stdout.on("data", (d) => (log += d));
 server.stderr.on("data", (d) => (log += d));
@@ -91,7 +102,21 @@ try {
   check("after signing out the routine is not shown", (await ana.call("GET", "state")).body.routine === null);
 
   const chat = await phone.call("POST", "chat", { history: [{ role: "user", content: "hi" }] });
-  check("with no API key the assistant says it is off", chat.status === 502 && /not switched on/.test(chat.body.error ?? ""));
+  check("with no API key the assistant says it is not connected", chat.status === 502 && /not connected/.test(chat.body.error ?? ""));
+
+  // Connecting a person's own key.
+  check("with no key, the assistant shows as off", (await phone.call("GET", "me")).body.spotter === false);
+  check("something that is not a key is refused", (await phone.call("PUT", "key", { key: "hello" })).status === 400);
+  const rejected = await phone.call("PUT", "key", { key: "sk-ant-wrong-key-0123456789abcdefghij" });
+  check("a key Anthropic rejects is refused and not saved", rejected.status === 400 && (await phone.call("GET", "me")).body.spotter === false);
+  const connected = await phone.call("PUT", "key", { key: GOOD_KEY });
+  check("a working key connects", connected.status === 200 && connected.body.source === "yours" && connected.body.checked === true);
+  const mine = await phone.call("GET", "me");
+  check("only the last four characters come back", mine.body.spotter === true && mine.body.key.last4 === "WXYZ" && !JSON.stringify([mine.body, connected.body]).includes(GOOD_KEY));
+  const files = fs.readdirSync(dir).filter((f) => f.startsWith("wakeset.db"));
+  check("the key is not stored in readable form", files.length > 0 && files.every((f) => !fs.readFileSync(path.join(dir, f)).includes(GOOD_KEY)));
+  check("another visitor does not get that key", (await ben.call("GET", "me")).body.spotter === false);
+  check("disconnecting removes it", (await phone.call("DELETE", "key")).body.source === null && (await phone.call("GET", "me")).body.spotter === false);
 
   check("erasing needs the password", (await phone.call("DELETE", "me", { password: "nope" })).status === 400);
   check("erasing with the password works", (await phone.call("DELETE", "me", { password: "correct horse" })).status === 200);
@@ -99,7 +124,8 @@ try {
 } catch (error) {
   check("smoke run", false, String(error) + "\n" + log);
 } finally {
-  server.kill();
+  try { process.kill(-server.pid); } catch { server.kill(); }
+  fake.close();
   fs.rmSync(dir, { recursive: true, force: true });
 }
 console.log(failed ? `\n${failed} failed` : "\nAll passed");

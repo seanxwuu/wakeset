@@ -1,8 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, useBoard } from "@/components/board";
 import { Routine, uniqueIds } from "@/lib/types";
+
+type Theme = "system" | "light" | "dark";
+
+/** Light, dark, or whatever the device is set to. Remembered in this browser. */
+function Appearance() {
+  const [theme, setTheme] = useState<Theme>("system");
+  useEffect(() => {
+    try { const t = localStorage.getItem("wakeset-theme"); setTheme(t === "light" || t === "dark" ? t : "system"); } catch { /* stays on system */ }
+  }, []);
+  const choose = (next: Theme) => {
+    setTheme(next);
+    try { if (next === "system") localStorage.removeItem("wakeset-theme"); else localStorage.setItem("wakeset-theme", next); } catch { /* applies until the page is closed */ }
+    if (next === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", next);
+  };
+  return (
+    <div className="card spread">
+      <div><h3>Appearance</h3><p>System follows your device's light or dark setting.</p></div>
+      <div className="seg" role="group" aria-label="Theme">
+        {(["system", "light", "dark"] as Theme[]).map((t) => <button key={t} className={theme === t ? "on" : ""} aria-pressed={theme === t} onClick={() => choose(t)}>{t[0].toUpperCase() + t.slice(1)}</button>)}
+      </div>
+    </div>
+  );
+}
 
 export default function Account() {
   const { me, state, update, flush, toast } = useBoard();
@@ -75,6 +99,8 @@ export default function Account() {
         </div>
       )}
       {error && <p className="problem" role="alert" style={{ marginTop: 12 }}>{error}</p>}
+
+      <Appearance />
 
       <div className="card spread">
         <div><h3>Routine file</h3><p>Save your routine as a file, or load one someone shared with you.</p></div>

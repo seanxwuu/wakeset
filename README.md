@@ -14,7 +14,7 @@ npm run build
 npm run smoke      # accounts, isolation, saving; needs a fresh build first
 ```
 
-With nothing configured it runs: each visitor gets a private routine tied to a cookie, and Spotter is off. Settings are in `.env.example`. Set `ANTHROPIC_API_KEY` to switch Spotter on.
+With nothing configured it runs: each visitor gets a private routine tied to a cookie, and Spotter is off until a key is connected. A person connects their own Claude API key on the Spotter page; setting `ANTHROPIC_API_KEY` on the server instead switches him on for everyone. Settings are in `.env.example`.
 
 ## Pages
 
@@ -22,8 +22,8 @@ With nothing configured it runs: each visitor gets a private routine tied to a c
 |---|---|
 | Week | The board. One tab per training day with a progress bar. Tap an exercise to cross it out, log the weight used, open "How to" for the cue and demo link. "Start next week" clears the ticks, keeps the weights, and asks how the new week should differ: mix it up (one move per superset traded for a similar one), repeat, or have Spotter write it. |
 | Build | The editor. Add, reorder, duplicate and delete days, blocks and exercises. "Add exercise" opens the library (about 95 moves, filtered by muscle group and equipment) or takes a name you type. |
-| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. He is also on every page: the button in the corner opens him in a panel on the right, docked beside the board on a wide screen. He knows which day is open and the weights you logged. |
-| Account | Make an account to keep the routine and open it on other devices. Export or import a routine file. Erase everything. |
+| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. He is also on every page: the button in the corner opens him in a panel on the right, docked beside the board on a wide screen. He knows which day is open and the weights you logged. The top of the page is where a Claude API key is connected, replaced or removed. |
+| Account | Make an account to keep the routine and open it on other devices. Choose the theme (system, light, dark). Export or import a routine file. Erase everything. |
 
 A first visit offers starter routines: the home 5-day Upper / Lower / Core plan, a 3-day gym plan, a no-equipment plan, or a blank week.
 
@@ -34,14 +34,14 @@ A first visit offers starter routines: the home 5-day Upper / Lower / Core plan,
 - **`lib/store.ts`** is one SQLite file of JSON documents, each belonging to an owner. The owner always comes from the signed cookie.
 - **`lib/auth.ts`**: every visitor has an id in a signed cookie. Making an account attaches an email and password to that id, so what was built as a guest stays.
 - **`lib/state.ts`** saves a person's routine, ticks and weights. Each save carries the revision it started from; a save from an out-of-date copy is refused and the browser takes the newer one.
-- **`lib/spotter.ts`** runs Claude with three tools (`set_routine`, `set_day`, `remove_day`). The model proposes; the tool schemas check the shape and code does the writing. Messages are capped per person and per site per day.
+- **`lib/spotter.ts`** runs Claude with three tools (`set_routine`, `set_day`, `remove_day`). The model proposes; the tool schemas check the shape and code does the writing. A person's own key (connected on the Spotter page) is checked with Anthropic, encrypted with AES-256-GCM under a key derived from the server secret (`lib/secrets.ts`), and never sent back to the browser, only its last four characters. Without one, the site's key is used if set, with messages capped per person and per site per day.
 - **`lib/vary.ts`** is "mix it up": the lists of moves that can stand in for each other, and the trade of one per working block.
 - **`lib/library.ts`** and **`lib/templates.ts`** are the exercise library and starter routines. Add to them freely.
 - **`components/board.tsx`** holds the browser's copy and saves changes a moment after they are made.
 
 ## What has and has not been tested
 
-Typecheck, the production build and `npm run smoke` pass. The Week, Build and Account pages have been used in a browser at desktop and phone widths, in light and dark. Spotter has not been run against the real API: no key was available where this was built, so his prompt and tools are untested with a model.
+Typecheck, the production build and `npm run smoke` pass. The Week, Build and Account pages have been used in a browser at desktop and phone widths, in light and dark. Connecting a key is tested against a stand-in for Anthropic (accepts one key, rejects others), not the real service. Spotter himself has not been run against the real API: no key was available where this was built, so his prompt and tools are untested with a model.
 
 ## Not built yet
 
@@ -72,7 +72,7 @@ The script adds swap, installs Docker, points the DuckDNS name at the machine (a
 
 | To | Run |
 |---|---|
-| Switch Spotter on | Put the key in `deploy/.env` as `ANTHROPIC_API_KEY=...`, then `cd deploy && sudo docker compose up -d` |
+| Switch Spotter on | Each person: connect a Claude API key on the Spotter page. For everyone at the site's expense: put the key in `deploy/.env` as `ANTHROPIC_API_KEY=...`, then `cd deploy && sudo docker compose up -d` |
 | Update to the latest code | `sudo bash deploy/update.sh` |
 | Back up now | `sudo bash deploy/backup.sh` (also runs nightly, newest 14 kept) |
 | List or restore backups | `sudo bash deploy/restore.sh`, then `sudo bash deploy/restore.sh latest` |
