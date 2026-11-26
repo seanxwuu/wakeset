@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { BoardProvider } from "@/components/board";
 import { Nav } from "@/components/Nav";
+import { SpotterPanel, SpotterProvider } from "@/components/spotter";
 
 export const metadata: Metadata = {
   title: "WakeSet",
@@ -14,10 +15,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <BoardProvider>
-          <div className="shell">
-            <Nav />
-            <main className="main">{children}</main>
-          </div>
+          <SpotterProvider>
+            <div className="shell">
+              <Nav />
+              <main className="main">{children}</main>
+            </div>
+            <SpotterPanel />
+          </SpotterProvider>
         </BoardProvider>
       </body>
     </html>

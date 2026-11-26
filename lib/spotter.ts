@@ -4,7 +4,7 @@ import { z } from "zod";
 import { LIBRARY } from "./library";
 import { getState, save } from "./state";
 import * as store from "./store";
-import { ASSISTANT, DayInput, RoutineInput, withIds, type Routine } from "./types";
+import { ASSISTANT, DayInput, RoutineInput, withIds, type Routine, type State } from "./types";
 
 // Spotter: the assistant. He reads the person's routine and changes it
 // through three tools. The model proposes a routine; code checks its shape
@@ -34,20 +34,26 @@ Writing a routine:
 - A block with superset true is done back to back before resting; its "how" says the rounds and the rest, e.g. "4 rounds. Rest 60–75s after each round."
 - Start each day with a short warm-up block. Keep each session to the length the person asked for.
 - When they say something was too much or left them very sore, cut volume first (fewer blocks or rounds), and add it back gradually.
+- When asked to write the next week: keep the same days and overall structure, nudge loads up a little where last_logged_lb shows they handled the weight (2.5 to 5 lb, written as a new load range), and trade one or two moves per day for similar ones so the week is not a copy. Do not add volume and weight in the same week.
 
 You are not a doctor. For pain, injury, or a medical condition, suggest they see a professional, and offer a gentler alternative if they want one. Keep replies short and direct: no preamble, no lists of everything in the routine (they can see the board).
 
 Exercise library, by group:
 ${[...new Set(LIBRARY.map((x) => x.group))].map((g) => `${g}: ${LIBRARY.filter((x) => x.group === g).map((x) => x.name).join("; ")}`).join("\n")}`;
 
-/** The routine as the model sees it: day ids for addressing, no exercise ids. */
-function describe(routine: Routine | null, week: number) {
+/** The routine as the model sees it: day ids for addressing, the weight last logged on each move, no exercise ids. */
+function describe(state: State) {
+  const { routine } = state;
   if (!routine) return "The person has no routine yet.";
   const slim = {
     name: routine.name,
-    days: routine.days.map((d) => ({ day_id: d.id, short: d.short, title: d.title, time: d.time, focus: d.focus, blocks: d.blocks.map((b) => ({ title: b.title, how: b.how, superset: b.superset, exercises: b.exercises.map(({ id: _id, ...e }) => e) })) })),
+    days: routine.days.map((d) => ({
+      day_id: d.id, short: d.short, title: d.title, time: d.time, focus: d.focus,
+      blocks: d.blocks.map((b) => ({ title: b.title, how: b.how, superset: b.superset, exercises: b.exercises.map(({ id, ...e }) => ({ ...e, ...(state.weights[id] ? { last_logged_lb: state.weights[id] } : {}) })) })),
+    })),
   };
-  return `The person's current routine (week ${week}):\n${JSON.stringify(slim)}`;
+  const open = routine.days.find((d) => d.id === state.day);
+  return `The person is on week ${state.week}.${open ? ` The day open on their screen is "${open.short}" (day_id ${open.id}); "today" or "this session" means that day.` : ""} last_logged_lb is the weight they last recorded for a move; it is for your reference and is not a field you set.\nTheir current routine:\n${JSON.stringify(slim)}`;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -123,7 +129,7 @@ export async function chat(owner: string, rawHistory: unknown, signal?: AbortSig
       fallbacks: "default",
       system: [
         { type: "text", text: RULES, cache_control: { type: "ephemeral" } },
-        { type: "text", text: describe(state.routine, state.week) },
+        { type: "text", text: describe(state) },
       ],
       tools,
       messages: history,

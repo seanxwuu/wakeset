@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBoard } from "@/components/board";
+import { useSpotter } from "@/components/spotter";
 import { Start } from "@/components/Start";
+import { mixItUp } from "@/lib/vary";
 import { demoUrl, exercisesOf, progress, type Exercise } from "@/lib/types";
 
 function Row({ e }: { e: Exercise }) {
@@ -54,8 +56,70 @@ function Row({ e }: { e: Exercise }) {
   );
 }
 
+type Plan = "same" | "mix" | "spotter";
+
+/** Starting a new week: repeat it, trade a few moves for similar ones, or have the assistant write it. */
+function NextWeek({ onClose }: { onClose: () => void }) {
+  const { state, me, update, toast } = useBoard();
+  const spotter = useSpotter();
+  const ref = useRef<HTMLDialogElement>(null);
+  const [plan, setPlan] = useState<Plan>("mix");
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000));
+  useEffect(() => { ref.current?.showModal(); }, []);
+
+  const routine = state!.routine!;
+  const week = state!.week + 1;
+  const mix = mixItUp(routine, seed);
+  const name = me?.assistant ?? "Spotter";
+
+  const start = () => {
+    update((s) => {
+      if (plan === "mix") s.routine = mix.routine;
+      s.checks = {};
+      s.week += 1;
+      s.day = s.routine!.days[0]?.id ?? "";
+    });
+    toast(`Week ${week} started`);
+    ref.current?.close();
+    if (plan === "spotter") {
+      spotter.setOpen(true);
+      spotter.send(`I'm starting week ${week}. Write this week's version of my routine from last week's.`);
+    }
+  };
+
+  const Choice = ({ value, title, children }: { value: Plan; title: string; children: React.ReactNode }) => (
+    <label className={"choice" + (plan === value ? " on" : "")}>
+      <input type="radio" name="plan" checked={plan === value} onChange={() => setPlan(value)} />
+      <span><b>{title}</b><span>{children}</span></span>
+    </label>
+  );
+
+  return (
+    <dialog ref={ref} onClose={onClose} onClick={(e) => e.target === ref.current && ref.current?.close()} aria-label={`Start week ${week}`}>
+      <div className="dhead"><h3>Start week {week}</h3><p className="quiet small">Your ticks are cleared. The weights you logged stay, so you can see what to beat.</p></div>
+      <div className="dlist">
+        <Choice value="mix" title="Mix it up">One move in each superset or circuit is traded for a similar one that works the same muscles and needs no new equipment.</Choice>
+        {plan === "mix" && (
+          <div className="swaps">
+            {mix.swaps.length === 0 && <p className="quiet small">Nothing in this routine has a stand-in in the library, so the week would stay the same.</p>}
+            {mix.swaps.map((s, i) => <div key={i}><span className="quiet">{s.day} · {s.block}</span><span>{s.from} <b>→ {s.to}</b></span></div>)}
+            {mix.swaps.length > 0 && <button className="link" onClick={() => setSeed(seed + 7)}>Shuffle for a different mix</button>}
+          </div>
+        )}
+        <Choice value="same" title="Repeat this week">The same exercises again.</Choice>
+        {me?.spotter && <Choice value="spotter" title={`Have ${name} write it`}>He nudges the weights up from what you logged and changes a few moves, then tells you what he did.</Choice>}
+      </div>
+      <div className="dfoot">
+        <button className="btn" onClick={() => ref.current?.close()}>Cancel</button>
+        <button className="btn primary" onClick={start}>Start week {week}</button>
+      </div>
+    </dialog>
+  );
+}
+
 export default function Week() {
   const { state, update, toast } = useBoard();
+  const [next, setNext] = useState(false);
   if (!state) return <p className="quiet">Loading…</p>;
   if (!state.routine) return <Start />;
 
@@ -102,13 +166,10 @@ export default function Week() {
 
       <div className="actions">
         <button className="btn" onClick={() => { update((s) => { for (const e of exercisesOf(day)) delete s.checks[e.id]; }); toast("Day cleared"); }}>Clear this day</button>
-        <button className="btn primary" onClick={() => {
-          if (!confirm("Clear all ticks and start the next week? Your logged weights stay.")) return;
-          update((s) => { s.checks = {}; s.week += 1; s.day = s.routine!.days[0]?.id ?? ""; });
-          toast(`Week ${state.week + 1} started`);
-        }}>Start next week</button>
+        <button className="btn primary" onClick={() => setNext(true)}>Start next week</button>
         <Link className="btn" href="/build">Edit routine</Link>
       </div>
+      {next && <NextWeek onClose={() => setNext(false)} />}
     </>
   );
 }
