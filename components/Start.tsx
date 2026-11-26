@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BLANK, TEMPLATES } from "@/lib/templates";
 import { withIds, type RoutineInput } from "@/lib/types";
 import { useBoard } from "./board";
+import { Logo } from "./Nav";
 
 /** Starter routines to pick from. Used on a first visit and from the builder's "start over". */
 export function Start({ replacing = false, onPicked }: { replacing?: boolean; onPicked?: () => void }) {
@@ -26,6 +27,7 @@ export function Start({ replacing = false, onPicked }: { replacing?: boolean; on
     <div>
       {!replacing && (
         <>
+          <Logo className="hero" />
           <header className="top"><h1>Build your week</h1></header>
           <p className="lede">Pick a starting point. Everything in it can be changed: days, blocks, exercises, sets and weights.</p>
         </>

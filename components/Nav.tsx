@@ -12,14 +12,10 @@ const ICONS: Record<string, string> = {
   account: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 20a8 8 0 0 1 16 0",
 };
 
-/** The WakeSet mark: a W with the marker stroke that crosses out a finished exercise. */
-export function Mark() {
-  return (
-    <svg className="mark" viewBox="0 0 64 64" aria-hidden>
-      <path d="M12 20l9 24 11-17 11 17 9-24" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path className="strike" d="M9 35l46-4" fill="none" strokeWidth="5" strokeLinecap="round" />
-    </svg>
-  );
+/** The WakeSet artwork. Yellow on a clear background, so it sits on light and dark alike. */
+export function Logo({ className = "" }: { className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={`logo ${className}`} src="/logo.webp" alt="" width={889} height={508} />;
 }
 
 /** The side bar on a wide screen; on a phone, a top bar with the sections in a drawer behind the menu button. */
@@ -50,12 +46,12 @@ export function Nav() {
         <button type="button" className="menu-btn" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="sections" onClick={() => setOpen(!open)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d={open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16"} /></svg>
         </button>
-        <Link href="/" className="topbar-brand"><Mark />wakeset</Link>
+        <Link href="/" className="topbar-brand"><Logo />wakeset</Link>
         {here && <span className="topbar-page">{here}</span>}
       </header>
       {open && <div className="scrim" onClick={() => setOpen(false)} aria-hidden />}
       <nav id="sections" className={`side ${open ? "open" : ""}`} aria-label="Sections">
-        <div className="brand"><Mark />wakeset</div>
+        <Link href="/" className="brand"><Logo />wakeset</Link>
         {nav.map((n) => (
           <Link key={n.href} href={n.href} className={`nav ${path === n.href ? "on" : ""}`} aria-current={path === n.href ? "page" : undefined}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={ICONS[n.id]} /></svg>
