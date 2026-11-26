@@ -1,10 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/barlow/400.css";
-import "@fontsource/barlow/500.css";
-import "@fontsource/barlow/600.css";
-import "@fontsource/barlow-condensed/600.css";
-import "@fontsource/barlow-condensed/700.css";
-import "@fontsource/barlow-condensed/800.css";
+import "@fontsource-variable/newsreader";
+import "@fontsource-variable/newsreader/wght-italic.css";
 import "./globals.css";
 import { BoardProvider } from "@/components/board";
 import { Nav } from "@/components/Nav";
@@ -13,16 +9,16 @@ export const metadata: Metadata = {
   title: "WakeSet",
   description: "Build your own weekly workout routine and tick it off as you train.",
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#1A211E" }, { color: "#F2F4F6" }] };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#0a0c0f" }, { color: "#fbfaf7" }] };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         <BoardProvider>
-          <div className="wrap">
+          <div className="shell">
             <Nav />
-            {children}
+            <main className="main">{children}</main>
           </div>
         </BoardProvider>
       </body>

@@ -26,7 +26,7 @@ export function Start({ replacing = false, onPicked }: { replacing?: boolean; on
     <div>
       {!replacing && (
         <>
-          <h1>Build your<br />week</h1>
+          <header className="top"><h1>Build your week</h1></header>
           <p className="lede">Pick a starting point. Everything in it can be changed: days, blocks, exercises, sets and weights.</p>
         </>
       )}

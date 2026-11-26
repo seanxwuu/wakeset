@@ -86,7 +86,7 @@ export default function Week() {
       </nav>
 
       {day && (
-        <main>
+        <div>
           <div className="dayhead"><h2>{day.title || day.short}</h2><span className="meta">{[day.time, `${p.done} of ${p.total} done`].filter(Boolean).join(", ")}</span></div>
           {day.focus && <p className="focus">{day.focus}</p>}
           {day.blocks.map((b) => (
@@ -97,7 +97,7 @@ export default function Week() {
             </section>
           ))}
           {p.total === 0 && <p className="quiet">Nothing on this day yet. <Link href="/build">Add exercises in Build.</Link></p>}
-        </main>
+        </div>
       )}
 
       <div className="actions">
