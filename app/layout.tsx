@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource/federo/400.css";
 import "./globals.css";
 import { BoardProvider } from "@/components/board";
 import { Nav } from "@/components/Nav";

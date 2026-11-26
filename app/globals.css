@@ -1,8 +1,7 @@
 /* The same shell, surfaces and spacing as Overture and Conduit: a warm paper
    background, white cards, a side bar. WakeSet's own parts are its typeface
    and its ceramic-yellow accent, taken from the logo. Yellow is light, so text
-   on it is dark (--accent-ink) and yellow used as text is a deeper ochre (--accent-text). The typeface is Helvetica, which is licensed and so
-   not shipped: Apple devices have it, others fall back to Arial or Roboto. */
+   on it is dark (--accent-ink) and yellow used as text is a deeper ochre (--accent-text). */
 :root {
   --bg: #f6f5f1;
   --surface: #ffffff;
@@ -27,7 +26,10 @@
   --side-on: #faf0cf;
   --side-line: #e2dfd7;
   --radius: 10px;
-  --sans: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", Roboto, sans-serif;
+  /* Federo: a high-contrast sans with heavy stems and hairline joins, the closest open-licence face to
+     Orviele. It ships with the site. It has one weight, so nothing is set bold: emphasis comes from
+     size and colour, and the browser is told not to fake a bold. */
+  --sans: "Federo", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color-scheme: light;
 }
 /* Dark theme: chosen under Account, or followed from the device when set to "System". */
@@ -85,18 +87,18 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--ink); font: 17px/1.5 var(--sans); font-synthesis: none; -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4, p { margin: 0; }
-h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; overflow-wrap: anywhere; }
-h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; }
-h3 { font-size: 16px; font-weight: 700; }
+h1 { font-size: 36px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; overflow-wrap: anywhere; }
+h2 { font-size: 25px; font-weight: 400; letter-spacing: 0; line-height: 1.25; }
+h3 { font-size: 20px; font-weight: 400; }
 a { color: var(--accent-text); }
 button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Shell */
 .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
 .side { background: var(--side); color: var(--side-ink); border-right: 1px solid var(--side-line); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; font-size: 15px; }
-.brand { color: var(--side-strong); font-weight: 700; font-size: 20px; padding: 0 8px 14px; letter-spacing: -0.01em; display: grid; gap: 2px; text-decoration: none; }
+.brand { color: var(--side-strong); font-weight: 400; font-size: 26px; padding: 0 8px 14px; letter-spacing: -0.01em; display: grid; gap: 2px; text-decoration: none; }
 .logo { display: block; width: 100%; height: auto; }
 .logo.hero { width: min(420px, 100%); margin: -8px 0 8px -8px; }
 .nav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: inherit; text-decoration: none; }
@@ -310,7 +312,7 @@ button.tag { border: 0; cursor: pointer; font-size: 13px; padding: 4px 9px; bord
   .side.open { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, 0.25); }
   .main { padding: 20px 16px 72px; }
   header.top { margin-bottom: 16px; }
-  h1 { font-size: 26px; }
+  h1 { font-size: 30px; }
 }
 @media (max-width: 520px) {
   .ex { grid-template-columns: 28px 1fr; }
