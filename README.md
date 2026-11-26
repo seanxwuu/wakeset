@@ -50,4 +50,34 @@ Typecheck, the production build and `npm run smoke` pass. The Week, Build and Ac
 
 ## Deploy
 
-`Dockerfile` builds an image that keeps its database in `/data`; mount a persistent disk there. It needs a host that runs a Node server with a disk (a VM, Fly, Railway, Render). It will not keep data on a serverless host such as Vercel as it stands.
+Written for a small Linux VM (Debian 12, 1 GB of memory is enough) with ports 80 and 443 open. Docker runs the app and Caddy, which gets and renews the HTTPS certificate. It needs a persistent disk, so it will not keep data on a serverless host such as Vercel.
+
+1. Create a name at duckdns.org (say `wakeset`) and copy your token from the top of that page.
+2. On the VM:
+
+```bash
+sudo apt-get update && sudo apt-get install -y git
+```
+
+```bash
+git clone https://github.com/seanxwuu/wakeset.git && cd wakeset
+```
+
+```bash
+sudo SITE_ADDRESS=wakeset.duckdns.org DUCKDNS_TOKEN=your-token bash deploy/setup-vm.sh
+```
+
+The script adds swap, installs Docker, points the DuckDNS name at the machine (and keeps it pointed there every five minutes), writes `deploy/.env` with a generated secret, builds and starts the site, and schedules a nightly backup. The first build takes 5 to 15 minutes. With a fixed public address you can leave `DUCKDNS_TOKEN` out and set the address on duckdns.org by hand.
+
+| To | Run |
+|---|---|
+| Switch Spotter on | Put the key in `deploy/.env` as `ANTHROPIC_API_KEY=...`, then `cd deploy && sudo docker compose up -d` |
+| Update to the latest code | `sudo bash deploy/update.sh` |
+| Back up now | `sudo bash deploy/backup.sh` (also runs nightly, newest 14 kept) |
+| List or restore backups | `sudo bash deploy/restore.sh`, then `sudo bash deploy/restore.sh latest` |
+
+Backups sit on the same disk as the database. They cover a bad update or a mistake, not a lost disk; for that, turn on scheduled disk snapshots in the cloud console.
+
+**Fast updates.** Every merge builds the app on GitHub (`.github/workflows/image.yml`) so the server can download it in about a minute instead of building it. For the server to be allowed to download it, make the package public once: on GitHub, open the repo's Packages, choose `wakeset`, Package settings, Change visibility, Public. Until then `update.sh` falls back to building on the server, which works but is slow.
+
+The deploy scripts have been checked for syntax and the backup and restore tool has been run against a real database, but the Docker build and `setup-vm.sh` have not been run on a VM yet.

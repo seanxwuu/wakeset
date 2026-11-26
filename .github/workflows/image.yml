@@ -1,0 +1,30 @@
+name: Build image
+
+# Builds the app once on GitHub for every change to the main line and stores
+# it in the GitHub container registry, so the server only has to download it
+# (deploy/update.sh) instead of compiling it on a small machine.
+on:
+  push:
+    branches: [main, claude/wizardly-hamilton-280cbw]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/seanxwuu/wakeset:${{ github.sha }}
+            ghcr.io/seanxwuu/wakeset:latest
