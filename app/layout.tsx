@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/newsreader";
-import "@fontsource-variable/newsreader/wght-italic.css";
 import "./globals.css";
 import { BoardProvider } from "@/components/board";
 import { Nav } from "@/components/Nav";
