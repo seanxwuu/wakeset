@@ -1,0 +1,35 @@
+# Runs WakeSet behind Caddy, which gets and renews the HTTPS certificate.
+# Used by setup-vm.sh; settings come from deploy/.env on the server.
+services:
+  app:
+    # Built on GitHub and downloaded by update.sh; the build section is the fallback.
+    image: ghcr.io/seanxwuu/wakeset:${WAKESET_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      WAKESET_DATA_DIR: /data
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+    # A 1 GB machine: leave room for the system and Caddy.
+    mem_limit: 700m
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  caddy-data:
