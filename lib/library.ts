@@ -12,6 +12,8 @@ const L = (group: string, gear: string, rows: [name: string, sets: string, cue: 
 export const LIBRARY: LibraryItem[] = [
   ...L("Chest", "Dumbbells", [
     ["DB floor press", "4 × 8–10", "Lie on the floor, knees bent. Lower until your upper arms touch the floor, then press."],
+    ["DB alternating floor press", "4 × 8 per side", "Both DBs up; lower and press one arm at a time while the other stays locked out."],
+    ["DB close-grip floor press", "4 × 10", "DBs pressed together over your chest, elbows tucked; more triceps than the regular press."],
     ["DB bench press", "4 × 8–10", "Shoulder blades pinched, lower the DBs to chest level, press up and slightly in."],
     ["DB incline press", "3 × 8–12", "Bench at about 30°, lower to the upper chest, elbows at 45°."],
     ["DB chest fly", "3 × 12–15", "Slight bend in the elbows, open wide until you feel a stretch, hug back up."],

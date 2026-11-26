@@ -20,9 +20,9 @@ With nothing configured it runs: each visitor gets a private routine tied to a c
 
 | Page | What it is for |
 |---|---|
-| Week | The board. One tab per training day with a progress bar. Tap an exercise to cross it out, log the weight used, open "How to" for the cue and demo link. "Start next week" clears the ticks and keeps the weights. |
+| Week | The board. One tab per training day with a progress bar. Tap an exercise to cross it out, log the weight used, open "How to" for the cue and demo link. "Start next week" clears the ticks, keeps the weights, and asks how the new week should differ: mix it up (one move per superset traded for a similar one), repeat, or have Spotter write it. |
 | Build | The editor. Add, reorder, duplicate and delete days, blocks and exercises. "Add exercise" opens the library (about 95 moves, filtered by muscle group and equipment) or takes a name you type. |
-| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. |
+| Spotter | The assistant. Say what you want ("4 days, dumbbells only, 30 minutes") and he writes or changes the routine. He is also on every page: the button in the corner opens him in a panel on the right, docked beside the board on a wide screen. He knows which day is open and the weights you logged. |
 | Account | Make an account to keep the routine and open it on other devices. Export or import a routine file. Erase everything. |
 
 A first visit offers starter routines: the home 5-day Upper / Lower / Core plan, a 3-day gym plan, a no-equipment plan, or a blank week.
@@ -35,6 +35,7 @@ A first visit offers starter routines: the home 5-day Upper / Lower / Core plan,
 - **`lib/auth.ts`**: every visitor has an id in a signed cookie. Making an account attaches an email and password to that id, so what was built as a guest stays.
 - **`lib/state.ts`** saves a person's routine, ticks and weights. Each save carries the revision it started from; a save from an out-of-date copy is refused and the browser takes the newer one.
 - **`lib/spotter.ts`** runs Claude with three tools (`set_routine`, `set_day`, `remove_day`). The model proposes; the tool schemas check the shape and code does the writing. Messages are capped per person and per site per day.
+- **`lib/vary.ts`** is "mix it up": the lists of moves that can stand in for each other, and the trade of one per working block.
 - **`lib/library.ts`** and **`lib/templates.ts`** are the exercise library and starter routines. Add to them freely.
 - **`components/board.tsx`** holds the browser's copy and saves changes a moment after they are made.
 
@@ -46,7 +47,7 @@ Typecheck, the production build and `npm run smoke` pass. The Week, Build and Ac
 
 - Password reset (it needs outgoing email). Until then a forgotten password cannot be recovered.
 - Clearing out guests who never come back.
-- A history of past weeks. Logged weights carry over; nothing else is kept.
+- A history of past weeks. Logged weights carry over; nothing else is kept, and a mixed week replaces the one before it.
 
 ## Deploy
 
